@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Text Summarizer</title>
+</head>
+<body>
+    <h1>Enter Text to Summarize</h1>
+    <form action="/summarize" method="post">
+        <textarea name="text" rows="10" cols="100"></textarea>
+        <br>
+        <label for="num_sentences">Number of Sentences:</label>
+        <input type="number" name="num_sentences" value="3" min="1" max="10">
+        <br>
+        <label for="method">Summarization Method:</label>
+        <select name="method">
+            <option value="spacy">SpaCy</option>
+            <option value="transformer">Transformer</option>
+        </select>
+        <br>
+        <input type="submit" value="Summarize">
+    </form>
+</body>
+</html>
