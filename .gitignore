@@ -32,6 +32,8 @@ venv/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+summary.ipynb
+text_summarization.ipynb
 
 # PyCharm
 .idea/
