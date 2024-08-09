@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Summarizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c2c2c;
+            color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            display: flex;
+            width: 90%;
+            max-width: 1200px;
+            background-color: #1c1c1c;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            margin-bottom: 20px;
+        }
+        .left, .right {
+            flex: 1;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .right {
+            border-left: 1px solid #444;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #f4f4f4;
+            text-align: center;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            margin-bottom: 20px;
+            background-color: #333;
+            color: #f4f4f4;
+            resize: vertical;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #f4f4f4;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            margin-bottom: 20px;
+            background-color: #333;
+            color: #f4f4f4;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        .result {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #ddd;
+            background-color: #333;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            min-height: 200px;
+            text-align: justify;
+        }
+        .result ul {
+            padding-left: 20px;
+        }
+        .result ul li {
+            margin-bottom: 10px;
+        }
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            background-color: #2c2c2c;
+        }
+        footer p {
+            display: flex;
+            align-items: center;
+            color: #f4f4f4;
+        }
+        footer img {
+            vertical-align: middle;
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+            filter: drop-shadow(0 0 10px rgba(255, 223, 0, 1));
+        }
+        footer a {
+            color: #f4f4f4;
+            text-decoration: none;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 223, 0, 1));
+        }
+        footer a:hover {
+            color: #FFD700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left">
+            <h1>Enter Text to Summarize</h1>
+            <form id="summarizeForm">
+                <label for="text">Text:</label>
+                <textarea id="text" name="text" rows="10"></textarea>
+
+                <label for="num_sentences">Number of Sentences:</label>
+                <input type="number" id="num_sentences" name="num_sentences" value="3" min="1" max="10">
+
+                <label for="method">Summarization Method:</label>
+                <select id="method" name="method">
+                    <option value="spacy">SpaCy</option>
+                    <option value="transformer">Transformer</option>
+                </select>
+
+                <input type="submit" value="Summarize">
+            </form>
+        </div>
+        <div class="right">
+            <h1>Summarized Text</h1>
+            <div id="result" class="result">
+                <ul>
+                    <li>Your summary will appear here...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2024 <img src="https://cdn-icons-png.flaticon.com/128/2111/2111432.png" alt="GitHub Logo"> <a href="https://github.com/prasad217" target="_blank">prasad217</a></p>
+    </footer>
+    
+    <script>
+        document.getElementById('summarizeForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent the form from submitting the traditional way
+            const text = document.getElementById('text').value;
+
+            // Replace this with an actual API call or logic to summarize the text
+            const summary = summarizeText(text, 2); // Mock function to summarize text
+
+            // Display the result in bullet points
+            const resultElement = document.getElementById('result');
+            resultElement.innerHTML = "<ul>" + summary.map(point => `<li>${point}</li>`).join('') + "</ul>";
+        });
+
+        // Mock function that pretends to summarize the text (replace with actual logic)
+        function summarizeText(text, numSentences) {
+            // Simple mock: split text into sentences and return the first few
+            const sentences = text.split('.').filter(sentence => sentence.trim().length > 0);
+            return sentences.slice(0, numSentences).map(sentence => sentence.trim() + ".");
+        }
+    </script>
+</body>
+</html>
