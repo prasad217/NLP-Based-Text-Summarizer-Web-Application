@@ -1,5 +1,5 @@
-from flask import Flask, request, render_template
-import summarizer  # Import your summarization functions
+from flask import Flask, request, jsonify, render_template
+import summarizer  # Your summarization module
 
 app = Flask(__name__)
 
@@ -9,11 +9,16 @@ def home():
 
 @app.route('/summarize', methods=['POST'])
 def summarize():
-    text = request.form['text']
-    num_sentences = int(request.form['num_sentences'])
-    method = request.form['method']
+    data = request.get_json()
+    text = data['text']
+    num_sentences = int(data['num_sentences'])
+    method = data['method']
     summary = summarizer.summarize_text(text, method=method, num_sentences=num_sentences)
-    return render_template('result.html', original_text=text, summary=summary)
+    
+    # Assuming summary is returned as a single string, split into list of sentences
+    summary_list = summary.split('. ')
+    
+    return jsonify({'summary': summary_list})
 
 if __name__ == "__main__":
     app.run(debug=True)

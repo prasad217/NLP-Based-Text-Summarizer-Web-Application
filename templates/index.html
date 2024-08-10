@@ -135,10 +135,10 @@
             <h1>Enter Text to Summarize</h1>
             <form id="summarizeForm">
                 <label for="text">Text:</label>
-                <textarea id="text" name="text" rows="10"></textarea>
+                <textarea id="text" name="text" rows="10" required></textarea>
 
                 <label for="num_sentences">Number of Sentences:</label>
-                <input type="number" id="num_sentences" name="num_sentences" value="3" min="1" max="10">
+                <input type="number" id="num_sentences" name="num_sentences" value="3" min="1" max="10" required>
 
                 <label for="method">Summarization Method:</label>
                 <select id="method" name="method">
@@ -163,24 +163,38 @@
     </footer>
     
     <script>
-        document.getElementById('summarizeForm').addEventListener('submit', function(e) {
+        document.getElementById('summarizeForm').addEventListener('submit', async function(e) {
             e.preventDefault(); // Prevent the form from submitting the traditional way
+
+            // Get form values
             const text = document.getElementById('text').value;
+            const numSentences = document.getElementById('num_sentences').value;
+            const method = document.getElementById('method').value;
 
-            // Replace this with an actual API call or logic to summarize the text
-            const summary = summarizeText(text, 2); // Mock function to summarize text
+            try {
+                // Make a POST request to the Flask backend
+                const response = await fetch('/summarize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        num_sentences: numSentences,
+                        method: method
+                    })
+                });
 
-            // Display the result in bullet points
-            const resultElement = document.getElementById('result');
-            resultElement.innerHTML = "<ul>" + summary.map(point => `<li>${point}</li>`).join('') + "</ul>";
+                // Parse the JSON response
+                const data = await response.json();
+
+                // Display the result in bullet points
+                const resultElement = document.getElementById('result');
+                resultElement.innerHTML = "<ul>" + data.summary.map(point => `<li>${point}</li>`).join('') + "</ul>";
+            } catch (error) {
+                console.error('Error:', error);
+            }
         });
-
-        // Mock function that pretends to summarize the text (replace with actual logic)
-        function summarizeText(text, numSentences) {
-            // Simple mock: split text into sentences and return the first few
-            const sentences = text.split('.').filter(sentence => sentence.trim().length > 0);
-            return sentences.slice(0, numSentences).map(sentence => sentence.trim() + ".");
-        }
     </script>
 </body>
 </html>

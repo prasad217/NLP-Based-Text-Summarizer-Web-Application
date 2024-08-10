@@ -13,41 +13,31 @@ model = T5ForConditionalGeneration.from_pretrained("t5-base")
 tokenizer = T5Tokenizer.from_pretrained("t5-base")
 summarizer = pipeline("summarization", model=model, tokenizer=tokenizer, framework="pt")
 
-def spacy_summarize(text, num_sentences=3):
-    doc = nlp(text)
-    tokens = []
-    stopwords = list(STOP_WORDS)
-    allowed_pos = ['ADJ', 'PROPN', 'VERB', 'NOUN']
-    for token in doc:
-        if token.text in stopwords or token.text in punctuation:
-            continue
-        if token.pos_ in allowed_pos:
-            tokens.append(token.text)
 
+def spacy_summarize(text, num_sentences):
+    doc = nlp(text)
+    tokens = [token.text.lower() for token in doc if token.text.lower() not in STOP_WORDS and token.text not in punctuation and token.pos_ in ['NOUN', 'VERB', 'ADJ', 'ADV']]
+    
     word_freq = Counter(tokens)
     max_freq = max(word_freq.values())
-    for word in word_freq.keys():
-        word_freq[word] = word_freq[word] / max_freq
-
-    sent_tokens = [sent for sent in doc.sents]
+    word_freq = {word: freq/max_freq for word, freq in word_freq.items()}
+    
     sent_scores = {}
-    for sent in sent_tokens:
+    for sent in doc.sents:
         for word in sent:
-            if word.text.lower() in word_freq.keys():
-                if sent not in sent_scores.keys():
-                    sent_scores[sent] = word_freq[word.text.lower()]
-                else:
-                    sent_scores[sent] += word_freq[word.text.lower()]
-
+            if word.text.lower() in word_freq:
+                sent_scores[sent] = sent_scores.get(sent, 0) + word_freq[word.text.lower()]
+    
     summarized_sentences = nlargest(num_sentences, sent_scores, key=sent_scores.get)
-    final_sentences = [sent.text for sent in summarized_sentences]
-    summary = " ".join(final_sentences)
+    summarized_sentences = sorted(summarized_sentences, key=lambda sent: sent.start)
+    summary = " ".join([sent.text for sent in summarized_sentences])
     return summary
+
 
 def transformer_summarize(text, num_sentences=3):
     max_length = min(512, num_sentences * 50)  # Adjust max_length based on desired summary length
-    min_length = num_sentences * 10
-    summary = summarizer(text, max_length=max_length, min_length=min_length, do_sample=False)
+    min_length = num_sentences * 20  # Increased min_length for better summaries
+    summary = summarizer(text, max_length=max_length, min_length=min_length, do_sample=True)
     return summary[0]['summary_text']
 
 def summarize_text(text, method='spacy', num_sentences=3):
