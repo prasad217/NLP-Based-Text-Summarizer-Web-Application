@@ -3,7 +3,7 @@ name: Deploy to Elastic Beanstalk
 on:
   push:
     branches:
-      - main  # Or the branch you want to trigger the deployment
+      - main  # Trigger deployment on push to the main branch
 
 jobs:
   deploy:
@@ -11,34 +11,34 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
-        python-version: 3.9
+        python-version: '3.9'
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Archive application
-      run: zip -r app.zip . -x "venv/*"
-
-    - name: Upload to S3
+    - name: Install AWS CLI
       run: |
-        aws s3 cp app.zip s3://textsummarizer-deploy-bucket/app.zip
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION: ap-southeast-2  # Use the region where your S3 bucket is located
+        curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+        sudo installer -pkg AWSCLIV2.pkg -target /
 
     - name: Deploy to Elastic Beanstalk
-      run: |
-        aws elasticbeanstalk create-application-version --application-name textsummarizer --version-label ${{ github.sha }} --source-bundle S3Bucket="textsummarizer-deploy-bucket",S3Key="app.zip"
-        aws elasticbeanstalk update-environment --application-name textsummarizer --environment-name textsummarizer-env --version-label ${{ github.sha }}
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION: ap-southeast-2  # Use the region where your Elastic Beanstalk environment is located
+      run: |
+        zip -r application.zip .
+        aws s3 cp application.zip s3://textsummarizer-deploy-bucket/
+        aws elasticbeanstalk create-application-version \
+            --application-name nlptextsummarizer \
+            --version-label ${{ github.sha }} \
+            --source-bundle S3Bucket="textsummarizer-deploy-bucket",S3Key="application.zip"
+        aws elasticbeanstalk update-environment \
+            --environment-name Nlptextsummarizer-env \
+            --version-label ${{ github.sha }}
