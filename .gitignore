@@ -48,3 +48,8 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 .vercel
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
