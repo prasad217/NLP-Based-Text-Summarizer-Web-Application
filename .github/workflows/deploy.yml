@@ -1,39 +1,66 @@
-name: Deploy to Elastic Beanstalk
+name: Deploy NLP Text Summarizer
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  ELASTIC_BEANSTALK_NAME: textsummarization-nlp-host
+  ELASTIC_BEANSTALK_ENV_NAME: Textsummarization-nlp-host-env
+  AWS_REGION: eu-north-1
+  S3_BUCKET_NAME: textsummarizer-bucket
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    - name: Setup Python
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: 3.9
 
-    - name: Install AWS CLI
+    - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y awscli
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
     - name: Zip application
-      run: zip -r application.zip .
-
-    - name: Upload to S3
       run: |
-        aws s3 cp application.zip s3://textsummarizer-deploy-bucket/application.zip
+        zip -r application.zip .
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with: 
+        name: deploy-files
+        path: application.zip
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: deploy-files
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ env.AWS_REGION }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    - name: Deploy to S3
+      run: |
+        aws s3 cp application.zip s3://${{ env.S3_BUCKET_NAME }}/application.zip
 
     - name: Deploy to Elastic Beanstalk
       run: |
-        aws elasticbeanstalk create-application-version --application-name nlptextsummarizer --version-label ${{ github.sha }} --source-bundle S3Bucket="textsummarizer-deploy-bucket",S3Key="application.zip"
-        aws elasticbeanstalk update-environment --environment-name Nlptextsummarizer-env --version-label ${{ github.sha }}
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws elasticbeanstalk create-application-version --application-name ${{ env.ELASTIC_BEANSTALK_NAME }} --version-label ${{ github.sha }} --source-bundle S3Bucket=${{ env.S3_BUCKET_NAME }},S3Key=application.zip
+        aws elasticbeanstalk update-environment --environment-name ${{ env.ELASTIC_BEANSTALK_ENV_NAME }} --version-label ${{ github.sha }}
+        aws elasticbeanstalk wait environment-updated --environment-name ${{ env.ELASTIC_BEANSTALK_ENV_NAME }}
