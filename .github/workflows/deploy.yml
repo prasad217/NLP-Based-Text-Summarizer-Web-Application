@@ -1,4 +1,4 @@
-name: Deploy to Elastic Beanstalk
+name: Deploy NLP Text Summarizer
 
 on:
   push:
@@ -7,9 +7,9 @@ on:
     branches: [ "main" ]
 
 env:
-  AWS_REGION: eu-north-1
   ELASTIC_BEANSTALK_NAME: textsummarization-nlp-host
   ELASTIC_BEANSTALK_ENV_NAME: Textsummarization-nlp-host-env
+  AWS_REGION: eu-north-1
   S3_BUCKET_NAME: textsummarizer-bucket
 
 jobs:
@@ -19,10 +19,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python
+    - name: Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: 3.9
 
     - name: Install dependencies
       run: |
@@ -31,21 +31,20 @@ jobs:
 
     - name: Zip application
       run: |
-        mkdir -p deploy-package
-        zip -r deploy-package/application.zip .
+        zip -r application.zip .
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4.3.3
-      with:
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with: 
         name: deploy-files
-        path: deploy-package/application.zip
+        path: application.zip
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
 
     steps:
-    - uses: actions/download-artifact@v4.1.7
+    - uses: actions/download-artifact@v4
       with:
         name: deploy-files
 
@@ -58,12 +57,10 @@ jobs:
 
     - name: Deploy to S3
       run: |
-        VERSION_LABEL="${{ github.sha }}-$(date +'%Y%m%d%H%M%S')"
-        aws s3 cp deploy-files/application.zip s3://${{ env.S3_BUCKET_NAME }}/application-${VERSION_LABEL}.zip
+        aws s3 cp application.zip s3://${{ env.S3_BUCKET_NAME }}/application.zip
 
     - name: Deploy to Elastic Beanstalk
       run: |
-        VERSION_LABEL="${{ github.sha }}-$(date +'%Y%m%d%H%M%S')"
-        aws elasticbeanstalk create-application-version --application-name ${{ env.ELASTIC_BEANSTALK_NAME }} --version-label $VERSION_LABEL --source-bundle S3Bucket="${{ env.S3_BUCKET_NAME }}",S3Key="application-${VERSION_LABEL}.zip"
-        aws elasticbeanstalk update-environment --application-name ${{ env.ELASTIC_BEANSTALK_NAME }} --environment-name ${{ env.ELASTIC_BEANSTALK_ENV_NAME }} --version-label $VERSION_LABEL
-        aws elasticbeanstalk wait environment-updated --application-name ${{ env.ELASTIC_BEANSTALK_NAME }} --environment-name ${{ env.ELASTIC_BEANSTALK_ENV_NAME }}
+        aws elasticbeanstalk create-application-version --application-name ${{ env.ELASTIC_BEANSTALK_NAME }} --version-label ${{ github.sha }} --source-bundle S3Bucket=${{ env.S3_BUCKET_NAME }},S3Key=application.zip
+        aws elasticbeanstalk update-environment --environment-name ${{ env.ELASTIC_BEANSTALK_ENV_NAME }} --version-label ${{ github.sha }}
+        aws elasticbeanstalk wait environment-updated --environment-name ${{ env.ELASTIC_BEANSTALK_ENV_NAME }}
