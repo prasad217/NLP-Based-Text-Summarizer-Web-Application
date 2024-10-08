@@ -1,0 +1,10 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - init: |
+      sudo apt-get update
+      curl -sfL https://get.k3s.io | sh -
+      k3s --version
+  - command: |
+      sudo k3s server &
