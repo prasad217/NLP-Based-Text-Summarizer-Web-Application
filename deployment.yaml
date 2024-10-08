@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nlp-summarizer-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nlp-summarizer
+  template:
+    metadata:
+      labels:
+        app: nlp-summarizer
+    spec:
+      containers:
+      - name: nlp-summarizer
+        image: prasad217/nlp-summarizer:latest
+        ports:
+        - containerPort: 5000
